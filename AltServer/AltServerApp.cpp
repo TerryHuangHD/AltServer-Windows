@@ -655,12 +655,34 @@ pplx::task<fs::path> AltServerApp::DownloadApp()
     auto task = fstream::open_ostream(WideStringFromString(temporaryPath.string()))
     .then([=](ostream file)
           {
-              *outputFile = file;
+			// Load config file
+			char executableCPath[MAX_PATH + 1];
+			GetModuleFileNameA(NULL, executableCPath, MAX_PATH + 1);
+
+			fs::path executablePath(executableCPath);
+
+			fs::path configPath = executablePath.parent_path();
+			configPath.append("ipa.config");
+
+			std::ifstream configFile(configPath.string().c_str());
+			std::string ipaUrl, urlHash;
+			configFile >> ipaUrl;
+			configFile >> urlHash;
+			
+			// Hash check
+			std::string hashResult = std::to_string(std::hash<std::string>()(ipaUrl));
+			if (urlHash != hashResult) {
+				ipaUrl = "https://f000.backblazeb2.com/file/altstore/altstore.ipa";
+				printf("Config file hash error, fallback to default\n");
+			}
+
+			// Request setup
+			*outputFile = file;
               
-              uri_builder builder(L"https://f000.backblazeb2.com/file/altstore/altstore.ipa");
+			uri_builder builder(WideStringFromString(ipaUrl));
               
-              http_client client(builder.to_uri());
-              return client.request(methods::GET);
+			http_client client(builder.to_uri());
+			return client.request(methods::GET);
           })
     .then([=](http_response response)
           {
