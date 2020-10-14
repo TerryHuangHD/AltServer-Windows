@@ -223,7 +223,7 @@ pplx::task<void> DeviceManager::InstallApp(std::string appFilepath, std::string 
 			}
 
 			/* Find Device */
-			if (idevice_new(&device, deviceUDID.c_str()) != IDEVICE_E_SUCCESS)
+			if (idevice_new_with_options(&device, deviceUDID.c_str(), IDEVICE_LOOKUP_USBMUX) != IDEVICE_E_SUCCESS)
 			{
 				throw ServerError(ServerErrorCode::DeviceNotFound);
 			}
@@ -593,7 +593,7 @@ pplx::task<void> DeviceManager::RemoveApp(std::string bundleIdentifier, std::str
 		try 
 		{
 			/* Find Device */
-			if (idevice_new(&device, deviceUDID.c_str()) != IDEVICE_E_SUCCESS)
+			if (idevice_new_with_options(&device, deviceUDID.c_str(), IDEVICE_LOOKUP_USBMUX) != IDEVICE_E_SUCCESS)
 			{
 				throw ServerError(ServerErrorCode::DeviceNotFound);
 			}
@@ -681,7 +681,7 @@ pplx::task<std::shared_ptr<WiredConnection>> DeviceManager::StartWiredConnection
 		idevice_connection_t connection = NULL;
 
 		/* Find Device */
-		if (idevice_new_ignore_network(&device, altDevice->identifier().c_str()) != IDEVICE_E_SUCCESS)
+		if (idevice_new_with_options(&device, altDevice->identifier().c_str(), (idevice_options)(IDEVICE_LOOKUP_USBMUX | IDEVICE_LOOKUP_NETWORK)) != IDEVICE_E_SUCCESS)
 		{
 			throw ServerError(ServerErrorCode::DeviceNotFound);
 		}
@@ -739,7 +739,7 @@ pplx::task<void> DeviceManager::InstallProvisioningProfiles(std::vector<std::sha
 		try
 		{
 			/* Find Device */
-			if (idevice_new(&device, deviceUDID.c_str()) != IDEVICE_E_SUCCESS)
+			if (idevice_new_with_options(&device, deviceUDID.c_str(), IDEVICE_LOOKUP_USBMUX) != IDEVICE_E_SUCCESS)
 			{
 				throw ServerError(ServerErrorCode::DeviceNotFound);
 			}
@@ -841,7 +841,7 @@ pplx::task<void> DeviceManager::RemoveProvisioningProfiles(std::set<std::string>
 		try
 		{
 			/* Find Device */
-			if (idevice_new(&device, deviceUDID.c_str()) != IDEVICE_E_SUCCESS)
+			if (idevice_new_with_options(&device, deviceUDID.c_str(), IDEVICE_LOOKUP_USBMUX) != IDEVICE_E_SUCCESS)
 			{
 				throw ServerError(ServerErrorCode::DeviceNotFound);
 			}
@@ -1112,7 +1112,7 @@ pplx::task<std::shared_ptr<NotificationConnection>> DeviceManager::StartNotifica
 		np_client_t client = NULL;
 
 		/* Find Device */
-		if (idevice_new_ignore_network(&device, altDevice->identifier().c_str()) != IDEVICE_E_SUCCESS)
+		if (idevice_new_with_options(&device, altDevice->identifier().c_str(), (idevice_options)(IDEVICE_LOOKUP_USBMUX | IDEVICE_LOOKUP_NETWORK)) != IDEVICE_E_SUCCESS)
 		{
 			throw ServerError(ServerErrorCode::DeviceNotFound);
 		}
@@ -1184,11 +1184,11 @@ std::vector<std::shared_ptr<Device>> DeviceManager::availableDevices(bool includ
         
         if (includeNetworkDevices)
         {
-            idevice_new(&device, udid);
+			idevice_new_with_options(&device, udid, IDEVICE_LOOKUP_USBMUX);
         }
         else
         {
-            idevice_new_ignore_network(&device, udid);
+			idevice_new_with_options(&device, udid, (idevice_options)(IDEVICE_LOOKUP_USBMUX | IDEVICE_LOOKUP_NETWORK));
         }
         
         if (!device)

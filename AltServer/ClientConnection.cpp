@@ -1,5 +1,7 @@
 #include "ClientConnection.h"
 
+#include <codecvt>
+
 #include <limits.h>
 #include <stddef.h>
 
