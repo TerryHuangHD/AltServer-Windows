@@ -289,7 +289,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			
 			AppendMenu(hPopupMenu, MF_STRING | MF_POPUP, (UINT)installMenu, L"Install AltStore");
-			AppendMenu(hPopupMenu, MF_STRING, ID_MENU_CHECK_FOR_UPDATES, L"Check for Updates...");
+			// AppendMenu(hPopupMenu, MF_STRING, ID_MENU_CHECK_FOR_UPDATES, L"Check for Updates...");
 			AppendMenu(hPopupMenu, MF_STRING, ID_MENU_CLOSE, L"Close");
 
 			// Popup the menu with cursor position as the coordinates to pop it up
