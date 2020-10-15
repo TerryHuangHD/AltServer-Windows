@@ -464,7 +464,7 @@ pplx::task<void> AltServerApp::InstallAltStore(std::shared_ptr<Device> installDe
 			task.get();
 
 			std::stringstream ss;
-			ss << "AltStore was successfully installed on " << installDevice->name() << ".";
+			ss << "App was successfully installed on " << installDevice->name() << ".";
 
 			this->ShowNotification("Installation Succeeded", ss.str());
 		}
@@ -557,7 +557,7 @@ pplx::task<void> AltServerApp::_InstallAltStore(std::shared_ptr<Device> installD
               *certificate = *tempCertificate;
 
 			  std::stringstream ssTitle;
-			  ssTitle << "Installing AltStore to " << installDevice->name() << "...";
+			  ssTitle << "Installing App to " << installDevice->name() << "...";
 
 			  std::stringstream ssMessage;
 			  ssMessage << "This may take a few seconds.";
@@ -796,8 +796,8 @@ pplx::task<std::shared_ptr<Certificate>> AltServerApp::FetchCertificate(std::sha
 				// Machine name starts with AltStore.
 
 				auto alertResult = MessageBox(NULL,
-					L"Apps installed with AltStore on your other devices will stop working. Are you sure you want to continue?",
-					L"AltStore already installed on another device.",
+					L"App installed on your other devices will stop working. Are you sure you want to continue?",
+					L"App already installed on another device.",
 					MB_OKCANCEL);
 
 				if (alertResult == IDCANCEL)
@@ -1234,7 +1234,7 @@ If you already have iCloud installed, please locate the "Apple" folder that was 
 		}
 		else if (result == ID_FOLDER)
 		{
-			std::string folderPath = this->BrowseForFolder(L"Choose the ìAppleî folder that contains both ìApple Application Supportî and ìInternet Servicesî. This can normally be found at: " + WideStringFromString(this->defaultAppleFolderPath()), this->appleFolderPath());
+			std::string folderPath = this->BrowseForFolder(L"Choose the \"Apple\" folder that contains both \"Apple Application Support\" and \"Internet Services\". This can normally be found at: " + WideStringFromString(this->defaultAppleFolderPath()), this->appleFolderPath());
 			if (folderPath.size() == 0)
 			{
 				return;
@@ -1253,7 +1253,7 @@ If you already have iCloud installed, please locate the "Apple" folder that was 
 	case AnisetteErrorCode::MissingFoundation:
 	case AnisetteErrorCode::MissingObjc:
 	{
-		std::wstring message = L"Please locate the ìAppleî folder installed with iTunes to continue using AltServer.\n\nThis can normally be found at:\n";
+		std::wstring message = L"Please locate the \"Apple\" folder installed with iTunes to continue using AltServer.\n\nThis can normally be found at:\n";
 		message += WideStringFromString(this->defaultAppleFolderPath());
 
 		int result = MessageBoxW(NULL, message.c_str(), WideStringFromString(error.localizedDescription()).c_str(), MB_OKCANCEL);
@@ -1262,7 +1262,7 @@ If you already have iCloud installed, please locate the "Apple" folder that was 
 			return;
 		}
 
-		std::string folderPath = this->BrowseForFolder(L"Choose the ìAppleî folder that contains both ìApple Application Supportî and ìInternet Servicesî. This can normally be found at: " + WideStringFromString(this->defaultAppleFolderPath()), this->appleFolderPath());
+		std::string folderPath = this->BrowseForFolder(L"Choose the \"Apple\" folder that contains both \"Apple Application Support\" and \"Internet Services\". This can normally be found at: " + WideStringFromString(this->defaultAppleFolderPath()), this->appleFolderPath());
 		if (folderPath.size() == 0)
 		{
 			return;
