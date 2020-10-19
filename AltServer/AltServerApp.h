@@ -37,13 +37,13 @@ namespace fs = boost::filesystem;
 class AltServerApp
 {
 public:
-	static AltServerApp *instance();
+	static AltServerApp* instance();
 
 	void Start(HWND windowHandle, HINSTANCE instanceHandle);
 	void Stop();
 	void CheckForUpdates();
-    
-    pplx::task<void> InstallAltStore(std::shared_ptr<Device> device, std::string appleID, std::string password);
+
+	pplx::task<void> InstallAltStore(std::shared_ptr<Device> device, std::string appleID, std::string password);
 
 	void ShowNotification(std::string title, std::string message);
 	void ShowAlert(std::string title, std::string message);
@@ -67,7 +67,7 @@ private:
 	AltServerApp();
 	~AltServerApp();
 
-	static AltServerApp *_instance;
+	static AltServerApp* _instance;
 
 	pplx::task<void> _InstallAltStore(std::shared_ptr<Device> installDevice, std::string appleID, std::string password);
 
@@ -88,22 +88,29 @@ private:
 	std::string defaultAppleFolderPath() const;
 
 	void HandleAnisetteError(AnisetteError& error);
-    
-    pplx::task<fs::path> DownloadApp();
-    
+
+	pplx::task<fs::path> DownloadApp();
+
 	pplx::task<std::pair<std::shared_ptr<Account>, std::shared_ptr<AppleAPISession>>>  Authenticate(std::string appleID, std::string password, std::shared_ptr<AnisetteData> anisetteData);
-    pplx::task<std::shared_ptr<Team>> FetchTeam(std::shared_ptr<Account> account, std::shared_ptr<AppleAPISession> session);
-    pplx::task<std::shared_ptr<Certificate>> FetchCertificate(std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
-    pplx::task<std::shared_ptr<AppID>> RegisterAppID(std::string appName, std::string identifier, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
+	pplx::task<std::shared_ptr<Team>> FetchTeam(std::shared_ptr<Account> account, std::shared_ptr<AppleAPISession> session);
+	pplx::task<std::shared_ptr<Certificate>> FetchCertificate(std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
+	pplx::task<std::map<std::string, std::shared_ptr<ProvisioningProfile>>> PrepareAllProvisioningProfiles(
+		std::shared_ptr<Application> application,
+		std::shared_ptr<Team> team,
+		std::shared_ptr<AppleAPISession> session);
+	pplx::task<std::shared_ptr<ProvisioningProfile>> PrepareProvisioningProfile(
+		std::shared_ptr<Application> application,
+		std::shared_ptr<Team> team,
+		std::shared_ptr<AppleAPISession> session);
+	pplx::task<std::shared_ptr<AppID>> RegisterAppID(std::string appName, std::string identifier, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
 	pplx::task<std::shared_ptr<AppID>> UpdateAppIDFeatures(std::shared_ptr<AppID> appID, std::shared_ptr<Application> app, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
 	pplx::task<bool> UpdateAppIDAppGroups(std::shared_ptr<AppID> appID, std::shared_ptr<Application> app, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
-    pplx::task<std::shared_ptr<Device>> RegisterDevice(std::shared_ptr<Device> device, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
-    pplx::task<std::shared_ptr<ProvisioningProfile>> FetchProvisioningProfile(std::shared_ptr<AppID> appID, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
-    
-    pplx::task<void> InstallApp(std::shared_ptr<Application> app,
-                                std::shared_ptr<Device> device,
-                                std::shared_ptr<Team> team,
-                                std::shared_ptr<AppID> appID,
-                                std::shared_ptr<Certificate> certificate,
-                                std::shared_ptr<ProvisioningProfile> profile);
+	pplx::task<std::shared_ptr<Device>> RegisterDevice(std::shared_ptr<Device> device, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
+	pplx::task<std::shared_ptr<ProvisioningProfile>> FetchProvisioningProfile(std::shared_ptr<AppID> appID, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
+
+	pplx::task<void> InstallApp(std::shared_ptr<Application> app,
+		std::shared_ptr<Device> device,
+		std::shared_ptr<Team> team,
+		std::shared_ptr<Certificate> certificate,
+		std::map<std::string, std::shared_ptr<ProvisioningProfile>> profiles);
 };

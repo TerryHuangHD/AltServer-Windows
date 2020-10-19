@@ -175,7 +175,12 @@ void Signer::SignApp(std::string path, std::vector<std::shared_ptr<ProvisioningP
         
         Application app(appBundlePath.string());
         prepareApp(app);
-        
+
+        for (auto appExtension : app.appExtensions())
+        {
+            prepareApp(*appExtension);
+        }
+
         // Sign application
         ldid::DiskFolder appBundle(app.path());
         std::string key = CertificatesContent(this->certificate());
@@ -190,7 +195,7 @@ void Signer::SignApp(std::string path, std::vector<std::shared_ptr<ProvisioningP
             }
             else
             {
-                filepath = fs::path(app.path()).append(path).string();
+                filepath = fs::canonical(fs::path(app.path()).append(path)).string();
             }
             
             auto entitlements = entitlementsByFilepath[filepath];
