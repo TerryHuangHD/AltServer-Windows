@@ -1169,8 +1169,8 @@ std::vector<std::shared_ptr<Device>> DeviceManager::availableDevices(bool includ
     std::vector<std::shared_ptr<Device>> availableDevices;
     
     int count = 0;
-    char **udids = NULL;
-    if (idevice_get_device_list(&udids, &count) < 0)
+	idevice_info_t *devices = NULL;
+    if (idevice_get_device_list_extended(&devices, &count) < 0)
     {
         fprintf(stderr, "ERROR: Unable to retrieve device list!\n");
         return availableDevices;
@@ -1178,7 +1178,7 @@ std::vector<std::shared_ptr<Device>> DeviceManager::availableDevices(bool includ
     
     for (int i = 0; i < count; i++)
     {
-        char *udid = udids[i];
+        char *udid = devices[i]->udid;
         
         idevice_t device = NULL;
         
@@ -1247,7 +1247,7 @@ std::vector<std::shared_ptr<Device>> DeviceManager::availableDevices(bool includ
         }
     }
     
-    idevice_device_list_free(udids);
+	idevice_device_list_extended_free(devices);
     
     return availableDevices;
 }
