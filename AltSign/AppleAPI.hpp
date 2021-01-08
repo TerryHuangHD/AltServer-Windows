@@ -43,8 +43,8 @@ public:
 	pplx::task<std::vector<std::shared_ptr<Team>>> FetchTeams(std::shared_ptr<Account> account, std::shared_ptr<AppleAPISession> session);
     
     // Devices
-    pplx::task<std::vector<std::shared_ptr<Device>>> FetchDevices(std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
-    pplx::task<std::shared_ptr<Device>> RegisterDevice(std::string name, std::string identifier, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
+    pplx::task<std::vector<std::shared_ptr<Device>>> FetchDevices(std::shared_ptr<Team> team, Device::Type types, std::shared_ptr<AppleAPISession> session);
+    pplx::task<std::shared_ptr<Device>> RegisterDevice(std::string name, std::string identifier, Device::Type type, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
     
     // Certificates
     pplx::task<std::vector<std::shared_ptr<Certificate>>> FetchCertificates(std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
@@ -62,7 +62,7 @@ public:
 	pplx::task<bool> AssignAppIDToGroups(std::shared_ptr<AppID> appID, std::vector<std::shared_ptr<AppGroup>> groups, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
 
     // Provisioning Profiles
-    pplx::task<std::shared_ptr<ProvisioningProfile>> FetchProvisioningProfile(std::shared_ptr<AppID> appID, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
+    pplx::task<std::shared_ptr<ProvisioningProfile>> FetchProvisioningProfile(std::shared_ptr<AppID> appID, Device::Type deviceType, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
     pplx::task<bool> DeleteProvisioningProfile(std::shared_ptr<ProvisioningProfile> profile, std::shared_ptr<Team> team, std::shared_ptr<AppleAPISession> session);
     
 private:
@@ -112,86 +112,95 @@ private:
 	{
 		try
 		{
-			auto value = parseHandler(plist);
-			return value;
+			try
+			{
+				auto value = parseHandler(plist);
+				plist_free(plist);
+				return value;
+			}
+			catch (std::exception& exception)
+			{
+				//odslog("Parse exception: " << exception.what());
+
+				int64_t resultCode = 0;
+
+				auto node = plist_dict_get_item(plist, errorCodeKey.c_str());
+				if (node == nullptr)
+				{
+					throw APIError(APIErrorCode::InvalidResponse);
+				}
+
+				auto type = plist_get_node_type(node);
+				switch (type)
+				{
+				case PLIST_STRING:
+				{
+					char* value = nullptr;
+					plist_get_string_val(node, &value);
+
+					resultCode = atoi(value);
+					break;
+				}
+
+				case PLIST_UINT:
+				{
+					uint64_t value = 0;
+					plist_get_uint_val(node, &value);
+
+					resultCode = (int64_t)value;
+					break;
+				}
+
+				case PLIST_REAL:
+				{
+					double value = 0;
+					plist_get_real_val(node, &value);
+
+					resultCode = (int64_t)value;
+					break;
+				}
+
+				default:
+					break;
+				}
+
+				auto error = resultCodeHandler(resultCode);
+				if (error.has_value())
+				{
+					throw error.value();
+				}
+
+				plist_t descriptionNode = nullptr;
+				for (auto& errorMessageKey : errorMessageKeys)
+				{
+					auto node = plist_dict_get_item(plist, errorMessageKey.c_str());
+					if (node == NULL)
+					{
+						continue;
+					}
+
+					descriptionNode = node;
+					break;
+				}
+
+				char* errorDescription = nullptr;
+				plist_get_string_val(descriptionNode, &errorDescription);
+
+				if (errorDescription == nullptr)
+				{
+					throw APIError(APIErrorCode::InvalidResponse);
+				}
+
+				std::stringstream ss;
+				ss << errorDescription << " (" << resultCode << ")";
+
+				throw LocalizedError((int)resultCode, ss.str());
+			}
 		}
 		catch (std::exception& exception)
 		{
-			//odslog("Parse exception: " << exception.what());
-
-			int64_t resultCode = 0;
-
-			auto node = plist_dict_get_item(plist, errorCodeKey.c_str());
-			if (node == nullptr)
-			{
-				throw APIError(APIErrorCode::InvalidResponse);
-			}
-
-			auto type = plist_get_node_type(node);
-			switch (type)
-			{
-			case PLIST_STRING:
-			{
-				char* value = nullptr;
-				plist_get_string_val(node, &value);
-
-				resultCode = atoi(value);
-				break;
-			}
-
-			case PLIST_UINT:
-			{
-				uint64_t value = 0;
-				plist_get_uint_val(node, &value);
-
-				resultCode = (int64_t)value;
-				break;
-			}
-
-			case PLIST_REAL:
-			{
-				double value = 0;
-				plist_get_real_val(node, &value);
-
-				resultCode = (int64_t)value;
-				break;
-			}
-
-			default:
-				break;
-			}
-
-			auto error = resultCodeHandler(resultCode);
-			if (error.has_value())
-			{
-				throw error.value();
-			}
-
-			plist_t descriptionNode = nullptr;
-			for (auto& errorMessageKey : errorMessageKeys)
-			{
-				auto node = plist_dict_get_item(plist, errorMessageKey.c_str());
-				if (node == NULL)
-				{
-					continue;
-				}
-
-				descriptionNode = node;
-				break;
-			}
-
-			char* errorDescription = nullptr;
-			plist_get_string_val(descriptionNode, &errorDescription);
-
-			if (errorDescription == nullptr)
-			{
-				throw APIError(APIErrorCode::InvalidResponse);
-			}
-
-			std::stringstream ss;
-			ss << errorDescription << " (" << resultCode << ")";
-
-			throw LocalizedError((int)resultCode, ss.str());
+			plist_free(plist);
+			throw;
 		}
 	}
 
